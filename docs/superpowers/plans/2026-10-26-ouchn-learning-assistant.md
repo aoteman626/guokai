@@ -108,7 +108,7 @@ runs/                     # 运行生成，不提交
 - Create: `.gitignore`
 - Existing: `.DS_Store`
 
-- [ ] **Step 1：初始化仓库**
+- [x] **Step 1：初始化仓库**
 
 Run:
 
@@ -122,7 +122,7 @@ Expected:
 Initialized empty Git repository
 ```
 
-- [ ] **Step 2：创建 `.gitignore`**
+- [x] **Step 2：创建 `.gitignore`**
 
 写入：
 
@@ -141,7 +141,7 @@ build/
 *.egg-info/
 ```
 
-- [ ] **Step 3：验证敏感目录不会进入版本控制**
+- [x] **Step 3：验证敏感目录不会进入版本控制**
 
 Run:
 
@@ -151,7 +151,7 @@ git check-ignore -v .venv .runtime runs .DS_Store
 
 Expected：四个路径均匹配 `.gitignore` 规则。
 
-- [ ] **Step 4：提交仓库基线**
+- [x] **Step 4：提交仓库基线**
 
 Run:
 
@@ -168,10 +168,12 @@ Expected：提交作者为 `sunbo.giog <sunbo.giog@bytedance.com>`。
 **Files:**
 - Create: `pyproject.toml`
 - Create: `src/ouchn_assistant/__init__.py`
-- Create: `scripts/ouchn_assistant.py`
+- Create: `src/ouchn_assistant/cli.py`
+- Create: `scripts/run_ouchn_assistant.py`
+- Create: `tests/test_package.py`
 - Modify: `requirements.txt`
 
-- [ ] **Step 1：将 `requirements.txt` 收敛为项目入口**
+- [x] **Step 1：将 `requirements.txt` 收敛为项目入口**
 
 替换为：
 
@@ -179,7 +181,7 @@ Expected：提交作者为 `sunbo.giog <sunbo.giog@bytedance.com>`。
 -e .[dev]
 ```
 
-- [ ] **Step 2：创建 `pyproject.toml`**
+- [x] **Step 2：创建 `pyproject.toml`**
 
 ```toml
 [build-system]
@@ -210,7 +212,7 @@ testpaths = ["tests"]
 addopts = "-q"
 ```
 
-- [ ] **Step 3：创建包版本文件**
+- [x] **Step 3：创建包版本文件**
 
 `src/ouchn_assistant/__init__.py`：
 
@@ -220,9 +222,25 @@ addopts = "-q"
 __version__ = "0.1.0"
 ```
 
-- [ ] **Step 4：创建唯一脚本入口**
+- [x] **Step 4：创建最小 CLI 与唯一脚本入口**
 
-`scripts/ouchn_assistant.py`：
+`src/ouchn_assistant/cli.py`：
+
+```python
+import argparse
+from collections.abc import Sequence
+
+from ouchn_assistant import __version__
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="ouchn-assistant")
+    parser.add_argument("--version", action="version", version=__version__)
+    parser.parse_args(argv)
+    return 0
+```
+
+`scripts/run_ouchn_assistant.py`：
 
 ```python
 from ouchn_assistant.cli import main
@@ -232,7 +250,7 @@ if __name__ == "__main__":
     raise SystemExit(main())
 ```
 
-- [ ] **Step 5：安装项目与开发依赖**
+- [x] **Step 5：安装项目与开发依赖**
 
 macOS:
 
@@ -248,32 +266,59 @@ Windows:
 
 Expected：`playwright==1.64.1`、`pytest==8.4.2` 安装成功。
 
-- [ ] **Step 6：验证包可导入**
+- [x] **Step 6：创建并运行包骨架烟测**
+
+`tests/test_package.py`：
+
+```python
+import ouchn_assistant
+import pytest
+
+from ouchn_assistant.cli import main
+
+
+def test_package_version() -> None:
+    assert ouchn_assistant.__version__ == "0.1.0"
+
+
+def test_cli_version(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as error:
+        main(["--version"])
+
+    assert error.value.code == 0
+    assert capsys.readouterr().out.strip() == "0.1.0"
+```
 
 Run:
 
 ```bash
 .venv/bin/python -c "import ouchn_assistant; print(ouchn_assistant.__version__)"
+.venv/bin/ouchn-assistant --version
+.venv/bin/python scripts/run_ouchn_assistant.py --version
+.venv/bin/python -m pytest -v
 ```
 
 Expected:
 
 ```text
 0.1.0
+0.1.0
+0.1.0
+2 passed
 ```
 
-- [ ] **Step 7：提交工程骨架**
+- [x] **Step 7：提交工程骨架**
 
 ```bash
-git add pyproject.toml requirements.txt scripts src
+git add pyproject.toml requirements.txt scripts src tests/test_package.py
 git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
   commit -m "build: add python package skeleton"
 ```
 
 ### 阶段 0 验收门
 
-- [ ] `git status --short` 无意外的 `.venv/`、`.runtime/` 或 `runs/`。
-- [ ] `.venv/bin/python -m pytest` 能启动，即使当前显示“no tests ran”。
+- [x] `git status --short` 无意外的 `.venv/`、`.runtime/` 或 `runs/`。
+- [x] `.venv/bin/python -m pytest` 输出 `2 passed`。
 - [ ] 用户审查提交历史后明确批准进入阶段 1。
 
 **停止点：不访问 LMS，不启动业务浏览器。**
@@ -934,7 +979,7 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 
 **Files:**
 - Create: `src/ouchn_assistant/cli.py`
-- Modify: `scripts/ouchn_assistant.py`
+- Modify: `scripts/run_ouchn_assistant.py`
 - Test: `tests/test_config.py`
 
 - [ ] **Step 1：增加 CLI 参数测试**
@@ -999,7 +1044,7 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 增加隐藏测试参数 `--smoke-browser`，只启动 Chrome、打开 `about:blank`、记录版本并关闭；该参数不得访问课程。
 
 ```bash
-.venv/bin/python scripts/ouchn_assistant.py --smoke-browser
+.venv/bin/python scripts/run_ouchn_assistant.py --smoke-browser
 ```
 
 Expected：退出码 0，浏览器正常关闭，profile 锁被释放。
@@ -1007,7 +1052,7 @@ Expected：退出码 0，浏览器正常关闭，profile 锁被释放。
 - [ ] **Step 6：提交**
 
 ```bash
-git add src/ouchn_assistant/cli.py scripts/ouchn_assistant.py tests
+git add src/ouchn_assistant/cli.py scripts/run_ouchn_assistant.py tests
 git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
   commit -m "feat: add read-only course inspection command"
 ```
@@ -1287,13 +1332,13 @@ Expected：全部通过。
 - [ ] **Step 3：执行空白页烟测**
 
 ```bash
-.venv/bin/python scripts/ouchn_assistant.py --smoke-browser
+.venv/bin/python scripts/run_ouchn_assistant.py --smoke-browser
 ```
 
 - [ ] **Step 4：本人在场执行只读探查**
 
 ```bash
-.venv/bin/python scripts/ouchn_assistant.py \
+.venv/bin/python scripts/run_ouchn_assistant.py \
   --mode inspect \
   --course-url "https://lms.ouchn.cn/course/10000118045/ng"
 ```
@@ -1318,13 +1363,13 @@ py -3.12 -m venv .venv
 - [ ] **Step 3：执行空白页烟测**
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\ouchn_assistant.py --smoke-browser
+.\.venv\Scripts\python.exe scripts\run_ouchn_assistant.py --smoke-browser
 ```
 
 - [ ] **Step 4：本人在场执行只读探查**
 
 ```powershell
-.\.venv\Scripts\python.exe scripts\ouchn_assistant.py `
+.\.venv\Scripts\python.exe scripts\run_ouchn_assistant.py `
   --mode inspect `
   --course-url "https://lms.ouchn.cn/course/10000118045/ng"
 ```

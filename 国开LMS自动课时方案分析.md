@@ -4,7 +4,7 @@
 > 日期：2026-10-26
 > 目标平台：Windows 10/11、macOS
 > 目标课程：`https://lms.ouchn.cn/course/10000118045/ng`
-> 当前状态：macOS Python 3.12 虚拟环境与 Playwright 1.64.1 已就绪；业务代码尚未实现
+> 当前状态：阶段 0 已完成；macOS 环境、Git 与 Python 包骨架已就绪，业务功能尚未实现
 > 责任人：用户负责授权、登录和学习操作；程序负责本地探查、提示、状态记录与失败留痕
 > 本次变更：移除无人值守完成课时、反检测、OS 级鼠标伪装和自动处理防挂机确认；重构为用户在环的跨平台学习辅助器
 
@@ -42,7 +42,7 @@
 
 - 用户需要完成本人账号下课程学习，并希望减少目录查找、进度核对和异常值守成本。
 - 课程学习进度可能影响考试资格，因此程序不得代替用户证明其本人参与。
-- 当前仓库已初始化 Git，现有方案文档、执行计划、虚拟环境和依赖清单；业务代码尚未实现。
+- 当前仓库已初始化 Git，方案文档、执行计划、虚拟环境、依赖配置和 Python 包骨架已建立；业务功能尚未实现。
 
 ### 2.2 目标
 
@@ -302,7 +302,7 @@
 ### 9.1 目录规划
 
 ```text
-scripts/ouchn_assistant.py             # 唯一命令入口
+scripts/run_ouchn_assistant.py         # 唯一命令入口
 src/ouchn_assistant/
   config.py                            # 参数、默认值、URL 校验
   models.py                            # Activity、RunEvent、状态枚举
@@ -382,7 +382,7 @@ runs/<run_id>/
 
 - macOS：Python 3.12.10、`.venv`、Playwright 1.64.1、系统 Chrome 启动烟测已完成。
 - Windows：尚未验证。
-- 仓库：Git 与 `.gitignore` 已建立，Python 包骨架待完成。
+- 仓库：Git、`.gitignore`、依赖配置、最小 CLI 与包骨架均已建立。
 
 验收：
 
