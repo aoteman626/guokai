@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<body>
+  <main class="course-detail-content">
+    <section class="subject-item chapter-row" data-id="subject-1" aria-expanded="false">
+      <header class="subject-head">
+        <span class="summary-title">第一单元</span>
+      </header>
+      <a
+        class="sco-link activity-entry"
+        data-activity-id="video-1"
+        data-type="video"
+        data-complete="true"
+        href="/course/100/learning-activity/video-1?locale=zh-CN#overview"
+      >
+        第一讲
+      </a>
+    </section>
+    <div
+      class="item"
+      ng-repeat="learningActivity in section.activities"
+      ng-click="openActivity(learningActivity)"
+    >
+      <span ng-bind="learningActivity.title">第二讲</span>
+    </div>
+    <button class="catalog-toggle" aria-expanded="false">展开目录</button>
+  </main>
+</body>
+</html>

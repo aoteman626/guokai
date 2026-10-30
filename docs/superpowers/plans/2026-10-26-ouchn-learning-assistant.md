@@ -1,3 +1,4 @@
+
 # 国开 LMS 跨平台学习辅助器 Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -89,14 +90,14 @@ runs/                     # 运行生成，不提交
 
 ## 2. 阶段总览
 
-| 阶段 | 交付物 | 是否访问 LMS | 结束门槛 |
-|---|---|---:|---|
-| 0. 仓库与环境基线 | Git、忽略规则、依赖、包骨架 | 否 | 环境测试通过 |
-| 1. 核心安全底座 | 配置、模型、原子写入、锁、状态机 | 否 | 核心单测全部通过 |
-| 2. 只读探查 MVP | 浏览器适配、fixture 解析、快照 | fixture 后可只读访问 | 不进入活动页 |
-| 3. 用户在环辅助 | 页面分类、通知、观察事件 | 是，本人在场 | 自动学习动作数为 0 |
-| 4. 离线报告与清理 | report、保留期清理 | 否 | 报告不启动浏览器 |
-| 5. 跨平台验收 | macOS/Windows 验证记录 | 只读烟测 | 两平台核心测试通过 |
+| 阶段              | 交付物                           |         是否访问 LMS | 结束门槛           |
+| ----------------- | -------------------------------- | -------------------: | ------------------ |
+| 0. 仓库与环境基线 | Git、忽略规则、依赖、包骨架      |                   否 | 环境测试通过       |
+| 1. 核心安全底座   | 配置、模型、原子写入、锁、状态机 |                   否 | 核心单测全部通过   |
+| 2. 只读探查 MVP   | 浏览器适配、fixture 解析、快照   | fixture 后可只读访问 | 不进入活动页       |
+| 3. 用户在环辅助   | 页面分类、通知、观察事件         |         是，本人在场 | 自动学习动作数为 0 |
+| 4. 离线报告与清理 | report、保留期清理               |                   否 | 报告不启动浏览器   |
+| 5. 跨平台验收     | macOS/Windows 验证记录           |             只读烟测 | 两平台核心测试通过 |
 
 ---
 
@@ -105,10 +106,11 @@ runs/                     # 运行生成，不提交
 ### Task 0.1：初始化 Git 与敏感目录隔离
 
 **Files:**
+
 - Create: `.gitignore`
 - Existing: `.DS_Store`
 
-- [x] **Step 1：初始化仓库**
+- [X] **Step 1：初始化仓库**
 
 Run:
 
@@ -122,7 +124,7 @@ Expected:
 Initialized empty Git repository
 ```
 
-- [x] **Step 2：创建 `.gitignore`**
+- [X] **Step 2：创建 `.gitignore`**
 
 写入：
 
@@ -141,7 +143,7 @@ build/
 *.egg-info/
 ```
 
-- [x] **Step 3：验证敏感目录不会进入版本控制**
+- [X] **Step 3：验证敏感目录不会进入版本控制**
 
 Run:
 
@@ -151,7 +153,7 @@ git check-ignore -v .venv .runtime runs .DS_Store
 
 Expected：四个路径均匹配 `.gitignore` 规则。
 
-- [x] **Step 4：提交仓库基线**
+- [X] **Step 4：提交仓库基线**
 
 Run:
 
@@ -166,6 +168,7 @@ Expected：提交作者为 `sunbo.giog <sunbo.giog@bytedance.com>`。
 ### Task 0.2：收敛依赖并建立可测试包骨架
 
 **Files:**
+
 - Create: `pyproject.toml`
 - Create: `src/ouchn_assistant/__init__.py`
 - Create: `src/ouchn_assistant/cli.py`
@@ -173,7 +176,7 @@ Expected：提交作者为 `sunbo.giog <sunbo.giog@bytedance.com>`。
 - Create: `tests/test_package.py`
 - Modify: `requirements.txt`
 
-- [x] **Step 1：将 `requirements.txt` 收敛为项目入口**
+- [X] **Step 1：将 `requirements.txt` 收敛为项目入口**
 
 替换为：
 
@@ -181,7 +184,7 @@ Expected：提交作者为 `sunbo.giog <sunbo.giog@bytedance.com>`。
 -e .[dev]
 ```
 
-- [x] **Step 2：创建 `pyproject.toml`**
+- [X] **Step 2：创建 `pyproject.toml`**
 
 ```toml
 [build-system]
@@ -212,7 +215,7 @@ testpaths = ["tests"]
 addopts = "-q"
 ```
 
-- [x] **Step 3：创建包版本文件**
+- [X] **Step 3：创建包版本文件**
 
 `src/ouchn_assistant/__init__.py`：
 
@@ -222,7 +225,7 @@ addopts = "-q"
 __version__ = "0.1.0"
 ```
 
-- [x] **Step 4：创建最小 CLI 与唯一脚本入口**
+- [X] **Step 4：创建最小 CLI 与唯一脚本入口**
 
 `src/ouchn_assistant/cli.py`：
 
@@ -250,7 +253,7 @@ if __name__ == "__main__":
     raise SystemExit(main())
 ```
 
-- [x] **Step 5：安装项目与开发依赖**
+- [X] **Step 5：安装项目与开发依赖**
 
 macOS:
 
@@ -266,7 +269,7 @@ Windows:
 
 Expected：`playwright==1.64.1`、`pytest==8.4.2` 安装成功。
 
-- [x] **Step 6：创建并运行包骨架烟测**
+- [X] **Step 6：创建并运行包骨架烟测**
 
 `tests/test_package.py`：
 
@@ -307,7 +310,7 @@ Expected:
 2 passed
 ```
 
-- [x] **Step 7：提交工程骨架**
+- [X] **Step 7：提交工程骨架**
 
 ```bash
 git add pyproject.toml requirements.txt scripts src tests/test_package.py
@@ -317,9 +320,9 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 
 ### 阶段 0 验收门
 
-- [x] `git status --short` 无意外的 `.venv/`、`.runtime/` 或 `runs/`。
-- [x] `.venv/bin/python -m pytest` 输出 `2 passed`。
-- [ ] 用户审查提交历史后明确批准进入阶段 1。
+- [X] `git status --short` 无意外的 `.venv/`、`.runtime/` 或 `runs/`。
+- [X] `.venv/bin/python -m pytest` 输出 `2 passed`。
+- [X] 用户审查提交历史后明确批准进入阶段 1。
 
 **停止点：不访问 LMS，不启动业务浏览器。**
 
@@ -327,13 +330,18 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 
 ## 4. 阶段 1：核心安全底座
 
+实际补充的反例：凭据 URL 与畸形端口、嵌套敏感字段和 URL query
+脱敏、原子写入失败保护、锁 token 写入失败及部分写入、锁 ownership
+变化。阶段 1 最终全量回归为 `33 passed`。
+
 ### Task 1.1：定义稳定数据模型
 
 **Files:**
+
 - Create: `src/ouchn_assistant/models.py`
 - Create: `tests/test_models.py`
 
-- [ ] **Step 1：先写模型测试**
+- [X] **Step 1：先写模型测试**
 
 `tests/test_models.py`：
 
@@ -351,7 +359,7 @@ def test_public_enums_are_stable() -> None:
     assert SessionState.USER_ACTION_REQUIRED.value == "user_action_required"
 ```
 
-- [ ] **Step 2：运行测试确认失败**
+- [X] **Step 2：运行测试确认失败**
 
 ```bash
 .venv/bin/python -m pytest tests/test_models.py -v
@@ -359,7 +367,7 @@ def test_public_enums_are_stable() -> None:
 
 Expected：失败原因是 `ouchn_assistant.models` 不存在。
 
-- [ ] **Step 3：实现最小模型**
+- [X] **Step 3：实现最小模型**
 
 `src/ouchn_assistant/models.py`：
 
@@ -421,29 +429,26 @@ class RunEvent:
         return asdict(self)
 ```
 
-- [ ] **Step 4：运行模型测试**
+- [X] **Step 4：运行模型测试**
 
 ```bash
 .venv/bin/python -m pytest tests/test_models.py -v
 ```
 
-Expected：2 passed。
+Expected：4 passed。
 
-- [ ] **Step 5：提交**
+- [X] **Step 5：本地检查点（按用户要求不提交 Git）**
 
-```bash
-git add src/ouchn_assistant/models.py tests/test_models.py
-git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
-  commit -m "feat: define assistant domain models"
-```
+结果：模型测试 `4 passed`，代码保留在本地工作区。
 
 ### Task 1.2：实现最小配置与课程 URL 校验
 
 **Files:**
+
 - Create: `src/ouchn_assistant/config.py`
 - Create: `tests/test_config.py`
 
-- [ ] **Step 1：先写配置测试**
+- [X] **Step 1：先写配置测试**
 
 `tests/test_config.py`：
 
@@ -485,7 +490,7 @@ def test_build_config_uses_project_local_paths(tmp_path: Path) -> None:
     assert config.runs_dir == tmp_path / "runs"
 ```
 
-- [ ] **Step 2：确认测试失败**
+- [X] **Step 2：确认测试失败**
 
 ```bash
 .venv/bin/python -m pytest tests/test_config.py -v
@@ -493,7 +498,7 @@ def test_build_config_uses_project_local_paths(tmp_path: Path) -> None:
 
 Expected：失败原因是配置模块不存在。
 
-- [ ] **Step 3：实现配置**
+- [X] **Step 3：实现配置**
 
 实现以下公开接口：
 
@@ -536,29 +541,26 @@ def build_config(
 - 路径必须匹配 `^/course/([0-9]+)/ng/?$`。
 - `sanitized_url` 不含 query 和 fragment。
 
-- [ ] **Step 4：运行配置测试**
+- [X] **Step 4：运行配置测试**
 
 ```bash
 .venv/bin/python -m pytest tests/test_config.py -v
 ```
 
-Expected：5 passed。
+Expected：12 passed。
 
-- [ ] **Step 5：提交**
+- [X] **Step 5：本地检查点（按用户要求不提交 Git）**
 
-```bash
-git add src/ouchn_assistant/config.py tests/test_config.py
-git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
-  commit -m "feat: validate minimal assistant configuration"
-```
+结果：配置测试 `12 passed`，代码保留在本地工作区。
 
 ### Task 1.3：实现脱敏与原子产物写入
 
 **Files:**
+
 - Create: `src/ouchn_assistant/artifacts.py`
 - Create: `tests/test_artifacts.py`
 
-- [ ] **Step 1：先写产物测试**
+- [X] **Step 1：先写产物测试**
 
 测试必须覆盖：
 
@@ -587,13 +589,13 @@ def test_atomic_write_json_replaces_complete_document(tmp_path: Path) -> None:
     assert not list(tmp_path.glob("*.tmp"))
 ```
 
-- [ ] **Step 2：确认测试失败**
+- [X] **Step 2：确认测试失败**
 
 ```bash
 .venv/bin/python -m pytest tests/test_artifacts.py -v
 ```
 
-- [ ] **Step 3：实现公开接口**
+- [X] **Step 3：实现公开接口**
 
 ```python
 SENSITIVE_KEYS = {
@@ -627,29 +629,26 @@ def append_jsonl(path: Path, payload: Mapping[str, Any]) -> None:
 - 临时文件名必须带 `.tmp`，异常时清理。
 - 不序列化 Playwright 对象、cookie 或 request headers。
 
-- [ ] **Step 4：运行测试**
+- [X] **Step 4：运行测试**
 
 ```bash
 .venv/bin/python -m pytest tests/test_artifacts.py -v
 ```
 
-Expected：全部通过。
+Expected：7 passed。
 
-- [ ] **Step 5：提交**
+- [X] **Step 5：本地检查点（按用户要求不提交 Git）**
 
-```bash
-git add src/ouchn_assistant/artifacts.py tests/test_artifacts.py
-git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
-  commit -m "feat: add private atomic artifact storage"
-```
+结果：产物测试 `7 passed`，代码保留在本地工作区。
 
 ### Task 1.4：实现单实例锁和显式状态机
 
 **Files:**
+
 - Create: `src/ouchn_assistant/session.py`
 - Create: `tests/test_session.py`
 
-- [ ] **Step 1：先写状态机与锁测试**
+- [X] **Step 1：先写状态机与锁测试**
 
 测试必须覆盖：
 
@@ -675,13 +674,13 @@ def test_profile_lock_rejects_second_owner(tmp_path: Path) -> None:
     first.release()
 ```
 
-- [ ] **Step 2：确认测试失败**
+- [X] **Step 2：确认测试失败**
 
 ```bash
 .venv/bin/python -m pytest tests/test_session.py -v
 ```
 
-- [ ] **Step 3：实现状态机**
+- [X] **Step 3：实现状态机**
 
 公开接口：
 
@@ -718,38 +717,34 @@ class ProfileLock:
 
 状态转移表必须在模块内写成不可变映射；`STOPPED` 没有后继状态。
 
-- [ ] **Step 4：运行测试**
+- [X] **Step 4：运行测试**
 
 ```bash
 .venv/bin/python -m pytest tests/test_session.py -v
 ```
 
-Expected：全部通过。
+Expected：8 passed。
 
-- [ ] **Step 5：运行阶段 1 全量测试**
+- [X] **Step 5：运行阶段 1 全量测试**
 
 ```bash
 .venv/bin/python -m pytest -v
 ```
 
-Expected：模型、配置、产物和状态机测试全部通过。
+Expected：全部 `33 passed`。
 
-- [ ] **Step 6：提交**
+- [X] **Step 6：本地检查点（按用户要求不提交 Git）**
 
-```bash
-git add src/ouchn_assistant/session.py tests/test_session.py
-git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
-  commit -m "feat: enforce session state and profile locking"
-```
+结果：状态机与锁测试 `8 passed`，全量回归 `33 passed`，代码保留在本地工作区。
 
 ### 阶段 1 验收门
 
-- [ ] 非 LMS URL 全部被拒绝。
-- [ ] 日志脱敏测试中 secret/cookie/token 命中数为 0。
-- [ ] 同一 profile 第二实例无法启动。
-- [ ] 非法状态转移必然抛错。
-- [ ] 原子写入后不存在残留 `.tmp`。
-- [ ] 用户审查测试结果和提交后明确批准进入阶段 2。
+- [X] 非 LMS URL 全部被拒绝。
+- [X] 日志脱敏测试中 secret/cookie/token 命中数为 0。
+- [X] 同一 profile 第二实例无法启动。
+- [X] 非法状态转移必然抛错。
+- [X] 原子写入后不存在残留 `.tmp`。
+- [X] 用户审查本地代码与测试结果后明确批准进入阶段 2。
 
 **停止点：仍不访问 LMS。**
 
@@ -757,13 +752,19 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 
 ## 5. 阶段 2：只读探查 MVP
 
+> **2026-10-26 纠偏：** 通用 discovery 在页面异步加载完成前采集，得出的
+> “不存在 `.learning-activity`”结论已被后续运行推翻。阶段 2 剩余工作由
+> `docs/superpowers/plans/2026-10-26-ouchn-readonly-inspector-recovery.md`
+> 接管；本节 Task 2.5 仅保留为历史执行记录，不再继续扩展。
+
 ### Task 2.1：实现浏览器生命周期与域名守卫
 
 **Files:**
+
 - Create: `src/ouchn_assistant/browser.py`
 - Create: `tests/test_browser.py`
 
-- [ ] **Step 1：先写纯函数边界测试**
+- [X] **Step 1：先写纯函数边界测试**
 
 ```python
 @pytest.mark.parametrize(
@@ -779,7 +780,7 @@ def test_is_allowed_lms_url(url: str, allowed: bool) -> None:
     assert is_allowed_lms_url(url) is allowed
 ```
 
-- [ ] **Step 2：确认失败并实现纯函数**
+- [X] **Step 2：确认失败并实现纯函数**
 
 ```python
 def is_allowed_lms_url(url: str) -> bool:
@@ -787,7 +788,7 @@ def is_allowed_lms_url(url: str) -> bool:
     return parsed.scheme == "https" and parsed.hostname == "lms.ouchn.cn"
 ```
 
-- [ ] **Step 3：实现 `BrowserSession`**
+- [X] **Step 3：实现 `BrowserSession`**
 
 公开接口：
 
@@ -825,7 +826,7 @@ self.playwright.chromium.launch_persistent_context(
 
 禁止添加 `ignore_default_args`、`AutomationControlled` 或 stealth 参数。
 
-- [ ] **Step 4：运行浏览器边界测试**
+- [X] **Step 4：运行浏览器边界测试**
 
 ```bash
 .venv/bin/python -m pytest tests/test_browser.py -v
@@ -833,21 +834,18 @@ self.playwright.chromium.launch_persistent_context(
 
 Expected：纯函数测试全部通过；不启动真实浏览器。
 
-- [ ] **Step 5：提交**
+- [X] **Step 5：本地检查点（按用户要求不提交 Git）**
 
-```bash
-git add src/ouchn_assistant/browser.py tests/test_browser.py
-git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
-  commit -m "feat: add bounded browser session"
-```
+结果：浏览器边界测试通过；代码保留在本地工作区。
 
 ### Task 2.2：创建中英文脱敏 fixture
 
 **Files:**
+
 - Create: `tests/fixtures/course_zh.html`
 - Create: `tests/fixtures/course_en.html`
 
-- [ ] **Step 1：创建中文 fixture**
+- [X] **Step 1：创建中文 fixture**
 
 ```html
 <!doctype html>
@@ -864,7 +862,7 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 </html>
 ```
 
-- [ ] **Step 2：创建英文 fixture**
+- [X] **Step 2：创建英文 fixture**
 
 ```html
 <!doctype html>
@@ -881,7 +879,7 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 </html>
 ```
 
-- [ ] **Step 3：确认 fixture 不含个人数据**
+- [X] **Step 3：确认 fixture 不含个人数据**
 
 ```bash
 grep -RniE 'cookie|authorization|password|token|身份证|手机号|邮箱' tests/fixtures || true
@@ -892,10 +890,11 @@ Expected：无输出。
 ### Task 2.3：实现活动信号归一化
 
 **Files:**
+
 - Create: `src/ouchn_assistant/inspector.py`
 - Create: `tests/test_inspector.py`
 
-- [ ] **Step 1：先写归一化测试**
+- [X] **Step 1：先写归一化测试**
 
 ```python
 from ouchn_assistant.inspector import normalize_activity
@@ -923,13 +922,13 @@ def test_missing_id_is_rejected() -> None:
         normalize_activity({"title": "No id", "href": ""})
 ```
 
-- [ ] **Step 2：确认失败**
+- [X] **Step 2：确认失败**
 
 ```bash
 .venv/bin/python -m pytest tests/test_inspector.py -v
 ```
 
-- [ ] **Step 3：实现公开接口**
+- [X] **Step 3：实现公开接口**
 
 ```python
 class ActivityParseError(ValueError):
@@ -955,11 +954,11 @@ def inspect_course(page: Page) -> list[Activity]:
 - 活动详情链接只作为字符串保存，不调用 `page.goto`。
 - 完成态无法确认时必须为 `UNKNOWN`。
 
-- [ ] **Step 4：使用本地 fixture 做浏览器集成测试**
+- [X] **Step 4：使用本地 fixture 做浏览器集成测试**
 
 测试用 `page.set_content(fixture.read_text())`，分别验证中文和英文 fixture 各解析 1 条活动；测试期间不得联网。
 
-- [ ] **Step 5：运行 inspector 测试**
+- [X] **Step 5：运行 inspector 测试**
 
 ```bash
 .venv/bin/python -m pytest tests/test_inspector.py -v
@@ -967,22 +966,19 @@ def inspect_course(page: Page) -> list[Activity]:
 
 Expected：纯函数和 fixture 集成测试全部通过。
 
-- [ ] **Step 6：提交**
+- [X] **Step 6：本地检查点（按用户要求不提交 Git）**
 
-```bash
-git add src/ouchn_assistant/inspector.py tests/test_inspector.py tests/fixtures
-git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
-  commit -m "feat: parse course activities without opening them"
-```
+结果：中英文 fixture、未知状态和结构缺失反例均通过；代码保留在本地工作区。
 
 ### Task 2.4：实现 `inspect` CLI 编排
 
 **Files:**
+
 - Create: `src/ouchn_assistant/cli.py`
 - Modify: `scripts/run_ouchn_assistant.py`
 - Test: `tests/test_config.py`
 
-- [ ] **Step 1：增加 CLI 参数测试**
+- [X] **Step 1：增加 CLI 参数测试**
 
 覆盖：
 
@@ -991,7 +987,7 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 - 非法域名返回退出码 2。
 - `--screenshots` 默认 false。
 
-- [ ] **Step 2：实现 `main(argv: Sequence[str] | None = None) -> int`**
+- [X] **Step 2：实现 `main(argv: Sequence[str] | None = None) -> int`**
 
 流程固定为：
 
@@ -1012,16 +1008,16 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 
 退出码：
 
-| 退出码 | 含义 |
-|---:|---|
-| 0 | 成功 |
-| 2 | 参数或配置错误 |
-| 3 | profile 正在使用 |
-| 4 | 浏览器或页面边界错误 |
-| 5 | 页面结构无法解析 |
-| 6 | 本地产物写入失败 |
+| 退出码 | 含义                 |
+| -----: | -------------------- |
+|      0 | 成功                 |
+|      2 | 参数或配置错误       |
+|      3 | profile 正在使用     |
+|      4 | 浏览器或页面边界错误 |
+|      5 | 页面结构无法解析     |
+|      6 | 本地产物写入失败     |
 
-- [ ] **Step 3：写入快照 schema**
+- [X] **Step 3：写入快照 schema**
 
 ```json
 {
@@ -1033,13 +1029,13 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 }
 ```
 
-- [ ] **Step 4：运行全量测试**
+- [X] **Step 4：运行全量测试**
 
 ```bash
 .venv/bin/python -m pytest -v
 ```
 
-- [ ] **Step 5：执行本地空白页烟测**
+- [X] **Step 5：执行本地空白页烟测**
 
 增加隐藏测试参数 `--smoke-browser`，只启动 Chrome、打开 `about:blank`、记录版本并关闭；该参数不得访问课程。
 
@@ -1049,20 +1045,39 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 
 Expected：退出码 0，浏览器正常关闭，profile 锁被释放。
 
-- [ ] **Step 6：提交**
+- [X] **Step 6：本地检查点（按用户要求不提交 Git）**
 
-```bash
-git add src/ouchn_assistant/cli.py scripts/run_ouchn_assistant.py tests
-git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
-  commit -m "feat: add read-only course inspection command"
-```
+结果：全量回归 `58 passed`，空白页 Chrome 烟测通过，profile 锁已释放；代码保留在本地工作区。
+
+### Task 2.5：一次性只读结构采集（真实页面适配补充）
+
+真实课程首页未使用 fixture 中的 `.learning-activity` 结构，因此增加独立
+discovery 工具，先持久化脱敏结构，再离线适配正式解析器。
+
+**Files:**
+
+- Create: `docs/read-only-discovery-checklist.md`
+- Create: `src/ouchn_assistant/discovery.py`
+- Create: `scripts/discover_ouchn_dom.py`
+- Create: `tests/fixtures/discovery_course.html`
+- Create: `tests/test_discovery.py`
+
+- [X] 定义单会话、单次采集、原子落盘和停止条件。
+- [X] 限制采集字段，不保存完整 DOM、凭据、网络请求或截图。
+- [X] 外域 frame 只记录脱敏 URL，不读取其 DOM。
+- [X] 实现独立 discovery 脚本入口。
+- [X] 本地 fixture 和单会话编排测试通过。
+- [X] 全量回归 `66 passed`，编译和禁止能力扫描通过。
+- [X] 用户评审采集清单和工具。
+- [X] 执行一次真实 discovery，生成 `dom_structure.json`。
+- [ ] 基于持久化产物离线适配 inspector，不重复启动浏览器探查。
 
 ### 阶段 2 验收门
 
-- [ ] 所有 fixture 测试通过。
-- [ ] `inspect` 源码不存在活动详情 `goto`、播放器控制或提交操作。
-- [ ] 空白页烟测通过并释放 profile 锁。
-- [ ] 用户本人在场，首次真实课程探查仅停留课程目录页。
+- [X] 所有 fixture 测试通过。
+- [X] `inspect` 源码不存在活动详情 `goto`、播放器控制或提交操作。
+- [X] 空白页烟测通过并释放 profile 锁。
+- [X] 用户本人在场，首次真实课程探查仅停留课程目录页。
 - [ ] 人工核对快照数量、标题和完成态；存在不一致则停止，不进入阶段 3。
 - [ ] 用户批准进入阶段 3。
 
@@ -1075,6 +1090,7 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 ### Task 3.1：实现页面状态分类器
 
 **Files:**
+
 - Modify: `src/ouchn_assistant/browser.py`
 - Create: `tests/test_browser.py`
 
@@ -1123,6 +1139,7 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 ### Task 3.2：实现人工接管通知与观察循环
 
 **Files:**
+
 - Modify: `src/ouchn_assistant/session.py`
 - Modify: `src/ouchn_assistant/cli.py`
 - Modify: `tests/test_session.py`
@@ -1199,6 +1216,7 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 ### Task 4.1：实现离线报告
 
 **Files:**
+
 - Create: `src/ouchn_assistant/report.py`
 - Create: `tests/test_report.py`
 - Modify: `src/ouchn_assistant/cli.py`
@@ -1259,6 +1277,7 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 ### Task 4.2：实现保留期清理
 
 **Files:**
+
 - Modify: `src/ouchn_assistant/artifacts.py`
 - Modify: `tests/test_artifacts.py`
 
@@ -1449,20 +1468,20 @@ git -c user.name="sunbo.giog" -c user.email="sunbo.giog@bytedance.com" \
 
 ## 10. 计划覆盖映射
 
-| v0.3 方案要求 | 执行任务 |
-|---|---|
-| 最小输入与 URL 白名单 | Task 1.2 |
-| 稳定模型与 `unknown` 默认值 | Task 1.1 |
-| 原子写入与脱敏 | Task 1.3 |
-| 单实例和状态机 | Task 1.4 |
-| 独立 profile、有头 Chrome | Task 2.1 |
-| 中英文页面兼容 | Task 2.2、2.3 |
-| 只读目录探查 | Task 2.3、2.4 |
-| 人工确认与强验证暂停 | Task 3.1、3.2 |
-| 离线报告 | Task 4.1 |
-| 保留期清理 | Task 4.2 |
-| Windows/macOS 一致性 | Task 5.1、5.2 |
-| 禁止反检测与自动学习动作 | Task 5.3 |
+| v0.3 方案要求                 | 执行任务      |
+| ----------------------------- | ------------- |
+| 最小输入与 URL 白名单         | Task 1.2      |
+| 稳定模型与 `unknown` 默认值 | Task 1.1      |
+| 原子写入与脱敏                | Task 1.3      |
+| 单实例和状态机                | Task 1.4      |
+| 独立 profile、有头 Chrome     | Task 2.1      |
+| 中英文页面兼容                | Task 2.2、2.3 |
+| 只读目录探查                  | Task 2.3、2.4 |
+| 人工确认与强验证暂停          | Task 3.1、3.2 |
+| 离线报告                      | Task 4.1      |
+| 保留期清理                    | Task 4.2      |
+| Windows/macOS 一致性          | Task 5.1、5.2 |
+| 禁止反检测与自动学习动作      | Task 5.3      |
 
 ## 11. 执行方式
 
