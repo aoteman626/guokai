@@ -51,6 +51,7 @@ class VideoState:
     current_time: float
     duration: float
     playback_rate: float
+    media_kind: str = "video"
     error_code: int | None = None
     ready_state: int = 0
     network_state: int = 0

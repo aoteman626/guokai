@@ -35,17 +35,18 @@ PAUSED_RECOVERY_TIMEOUT_SECONDS = 90
 PAUSED_RECOVERY_POLL_MS = 500
 
 READ_VIDEO = """
-(video) => ({
-    paused: video.paused,
-    ended: video.ended,
-    current_time: video.currentTime,
-    duration: Number.isFinite(video.duration) ? video.duration : 0,
-    playback_rate: video.playbackRate,
-    error_code: video.error?.code || null,
-    ready_state: video.readyState,
-    network_state: video.networkState,
-    buffered_end: video.buffered.length
-        ? video.buffered.end(video.buffered.length - 1) : 0
+(media) => ({
+    paused: media.paused,
+    ended: media.ended,
+    current_time: media.currentTime,
+    duration: Number.isFinite(media.duration) ? media.duration : 0,
+    playback_rate: media.playbackRate,
+    media_kind: media.tagName.toLowerCase(),
+    error_code: media.error?.code || null,
+    ready_state: media.readyState,
+    network_state: media.networkState,
+    buffered_end: media.buffered.length
+        ? media.buffered.end(media.buffered.length - 1) : 0
 })
 """
 
@@ -476,7 +477,7 @@ class CourseRunner:
             "module_title": activity.signals.get("module_title", ""),
         })
         self._open_activity_surface(activity, action="进入文本页面")
-        if self.page.locator("video:visible").count() > 0:
+        if self.page.locator("video:visible, audio:visible").count() > 0:
             raise AutomationPaused(
                 "文本页面包含可见视频，已停止自动判断；请人工确认页面内容"
             )
@@ -551,7 +552,7 @@ class CourseRunner:
                 self._assert_resource_surface()
             else:
                 self._assert_activity(activity)
-            if self.page.locator("video:visible").count() > 0:
+            if self.page.locator("video:visible, audio:visible").count() > 0:
                 raise AutomationPaused(
                     "文本页面滚动过程中出现视频，停止自动判断并保留现场"
                 )
@@ -798,7 +799,7 @@ class CourseRunner:
                         "外部资源跳转到非国开页面，无法安全判断内容；已保留现场"
                     )
                 return
-            if self.page.locator("video:visible").count() > 0:
+            if self.page.locator("video:visible, audio:visible").count() > 0:
                 return
             if (
                 self._find_resource_exit() is not None
@@ -925,7 +926,7 @@ class CourseRunner:
                     """() => {
                         const visible = (element) => element.getClientRects().length > 0
                             && getComputedStyle(element).visibility !== 'hidden';
-                        const videos = [...document.querySelectorAll('video')]
+                        const videos = [...document.querySelectorAll('video, audio')]
                             .filter(visible);
                         const root = document.scrollingElement || document.documentElement;
                         return {
@@ -956,11 +957,11 @@ class CourseRunner:
         deadline = monotonic() + 30
         while monotonic() < deadline:
             self._assert_resource_surface()
-            videos = self.page.locator("video:visible")
-            video_count = videos.count()
-            if video_count > 1:
+            media = self._media_locator(self.page)
+            media_count = media.count()
+            if media_count > 1:
                 raise AutomationPaused("外部资源包含多个可见视频，无法安全选择")
-            if video_count == 1:
+            if media_count == 1:
                 state = self._read_video()
                 if state.error_code:
                     raise AutomationPaused(f"外部资源视频报错：{state.error_code}")
@@ -999,7 +1000,7 @@ class CourseRunner:
             raise AutomationPaused("外部资源离开允许的国开页面范围")
         if is_course_home_url(self.page.url, self.config):
             if (
-                self.page.locator("video:visible").count() == 0
+                self.page.locator("video:visible, audio:visible").count() == 0
                 and self._find_resource_exit() is None
             ):
                 raise AutomationPaused("当前不是可识别的外部资源页面")
@@ -1048,29 +1049,38 @@ class CourseRunner:
     def _start_visible_video(
         self, activity: Activity, *, resource_surface: bool,
     ) -> None:
-        context = self.video_frame or self.page
-        context.wait_for_function(
-            """() => {
-                const videos = [...document.querySelectorAll('video')]
-                    .filter(v => v.getClientRects().length > 0);
-                return videos.length === 1 && Number.isFinite(videos[0].duration)
-                    && videos[0].duration > 0;
-            }""",
-            timeout=30_000,
-        )
+        context = self._wait_for_visible_media(timeout_ms=30_000)
         if resource_surface:
             self._assert_resource_surface()
         else:
             self._assert_activity(activity)
         state = self._read_video()
+        if state.duration <= 0:
+            button = self._find_play_button(context)
+            if button is None:
+                self._validate_video(state)
+            delayed_click(
+                self.page, button, action="点击播放", timeout_ms=10_000,
+                before_click=(
+                    self._assert_resource_surface
+                    if resource_surface else lambda: self._assert_activity(activity)
+                ),
+                allow_dialog=resource_surface,
+            )
+            try:
+                context.wait_for_function(
+                    """() => [...document.querySelectorAll('video, audio')]
+                        .some(media => Number.isFinite(media.duration)
+                            && media.duration > 0)""",
+                    timeout=30_000,
+                )
+            except PlaywrightTimeoutError as error:
+                raise AutomationPaused("播放后仍无法读取媒体时长") from error
+            state = self._read_video()
         self._validate_video(state)
         if state.paused and not state.ended:
-            button = context.locator(selectors.PLAY_BUTTON)
-            if button.count() == 0:
-                button = context.get_by_role(
-                    "button", name=re.compile(r"^(播放|Play)(视频| Video)?$", re.I),
-                )
-            if button.count() != 1:
+            button = self._find_play_button(context)
+            if button is None:
                 raise AutomationPaused("无法唯一定位视频播放按钮，当前播放器需要适配")
             def needs_playback() -> bool:
                 current = self._read_video()
@@ -1087,7 +1097,7 @@ class CourseRunner:
                 allow_dialog=resource_surface,
             )
             context.wait_for_function(
-                "() => [...document.querySelectorAll('video')].some(v => !v.paused || v.ended)",
+                "() => [...document.querySelectorAll('video, audio')].some(v => !v.paused || v.ended)",
                 timeout=10_000,
             )
         self._checkpoint("playing")
@@ -1097,13 +1107,63 @@ class CourseRunner:
             "resource_surface": resource_surface,
         })
 
+    def _wait_for_visible_media(self, *, timeout_ms: int) -> Page | Frame:
+        deadline = monotonic() + timeout_ms / 1000
+        while monotonic() < deadline:
+            contexts: list[Page | Frame] = [self.page, *self.page.frames[1:]]
+            matches: list[tuple[Page | Frame, int]] = []
+            for context in contexts:
+                try:
+                    count = self._media_locator(context).count()
+                except PlaywrightError:
+                    continue
+                if count:
+                    matches.append((context, count))
+            total = sum(count for _, count in matches)
+            if total == 1:
+                context = matches[0][0]
+                self.video_frame = context if isinstance(context, Frame) else None
+                return context
+            if total > 1:
+                raise AutomationPaused(
+                    "无法唯一识别当前视频或音频；不自动操作多个媒体播放器"
+                )
+            self.page.wait_for_timeout(250)
+        raise PlaywrightTimeoutError(
+            "等待可见视频或音频播放器超时"
+        )
+
     def _read_video(self) -> VideoState:
         context = self.video_frame or self.page
-        videos = context.locator("video:visible")
-        if videos.count() != 1:
-            raise AutomationPaused("无法唯一识别当前视频；不自动操作未知播放器或嵌入资源")
-        self.video_state = VideoState(**videos.evaluate(READ_VIDEO))
+        media = self._media_locator(context)
+        if media.count() != 1:
+            raise AutomationPaused("无法唯一识别当前视频或音频；不自动操作未知播放器或嵌入资源")
+        self.video_state = VideoState(**media.evaluate(READ_VIDEO))
         return self.video_state
+
+    @staticmethod
+    def _find_play_button(context: Page | Frame):
+        candidates = (
+            context.locator(selectors.PLAY_BUTTON),
+            context.get_by_role(
+                "button", name=re.compile(r"^(播放|Play)(视频| Video)?$", re.I),
+            ),
+            context.locator(".audio-player-wrapper .play:visible"),
+        )
+        for candidate in candidates:
+            if candidate.count() == 1 and candidate.is_visible():
+                return candidate
+        return None
+
+    @staticmethod
+    def _media_locator(context: Page | Frame):
+        visible = context.locator("video:visible, audio:visible")
+        if visible.count() == 1:
+            return visible
+        media = context.locator("video, audio")
+        if media.count() == 1:
+            return media
+        return visible
 
     @staticmethod
     def _validate_video(state: VideoState) -> None:
@@ -1167,13 +1227,13 @@ class CourseRunner:
             try:
                 context.wait_for_function(
                     """() => {
-                        const video = [...document.querySelectorAll('video')]
+                        const media = [...document.querySelectorAll('video, audio')]
                             .find(v => v.getClientRects().length > 0);
-                        return video && (
-                            video.ended
-                            || !video.paused
-                            || video.error
-                            || Math.abs(video.playbackRate - 1) > 0.001
+                        return media && (
+                            media.ended
+                            || !media.paused
+                            || media.error
+                            || Math.abs(media.playbackRate - 1) > 0.001
                         );
                     }""",
                     polling=100,
@@ -1235,11 +1295,11 @@ class CourseRunner:
                 context = self.video_frame or self.page
                 context.wait_for_function(
                     """(before) => {
-                        const v = [...document.querySelectorAll('video')]
+                        const media = [...document.querySelectorAll('video, audio')]
                             .find(v => v.getClientRects().length > 0);
-                        return !v || v.ended || v.paused || v.error
-                            || Math.abs(v.playbackRate - 1) > 0.001
-                            || v.currentTime >= before + 5;
+                        return !media || media.ended || media.paused || media.error
+                            || Math.abs(media.playbackRate - 1) > 0.001
+                            || media.currentTime >= before + 5;
                     }""",
                     arg=state.current_time, polling=500, timeout=10_000,
                 )
